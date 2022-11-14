@@ -5,13 +5,13 @@ function ToDoCard(props) {
 		<div className="card">
 			<h3>{props.todo.title}</h3>
 			<button
-				className="delete-btn"
+				className="delete-button"
 				onClick={() => props.handleDelete(props.todo._id)}
 			>
 				Delete
 			</button>
 			<button
-				className="complete-btn"
+				className="complete-button"
 				onClick={() => props.handleComplete(props.todo._id)}
 			>
 				Complete
