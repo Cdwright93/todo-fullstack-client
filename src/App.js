@@ -1,58 +1,73 @@
 import { useState, useEffect } from "react";
 import "./App.css";
+import { Routes, Route, Link } from "react-router-dom";
+import Home from "./Pages/Home";
+import AddTodo from "./Pages/AddToDo";
 
 const urlEndpoint = "http://localhost:4000";
 
 function App() {
 	const [todos, setTodos] = useState([]);
+	const [completedTodos, setCompletedTodos] = useState([]);
 
 	useEffect(() => {
-		const fetchTodos = async () => {
-			const response = await fetch(`${urlEndpoint}/todos`);
-			const data = await response.json();
-			console.log(data);
-			const fetchedTodos = data.todos;
-			setTodos(fetchedTodos);
-		};
-		fetchTodos();
+		fetch(`${urlEndpoint}/todos`)
+			.then((res) => res.json())
+			.then((data) => {
+				setTodos(data.todos);
+			});
 	}, []);
 
-	const addTodo = async (e) => {
-		if (e.key === "Enter") {
-			const result = await fetch(`${urlEndpoint}/todos/`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ title: e.target.value }),
-			});
-      const newTodo = await result.json();
-			setTodos([...todos, newTodo]);
-			e.target.value = "";
-		}
-	};
-	const deleteTodo = async (id) => {
-		const result = await fetch(`${urlEndpoint}/todos/${id}`, {
+	async function handleDelete(id) {
+		await fetch(`${urlEndpoint}/todos/${id}`, {
 			method: "DELETE",
 		});
-		const data = await result.json();
-		console.log(data);
-		const newTodos = todos.filter((todo) => todo._id !== id);
-		setTodos(newTodos);
-	};
+		setTodos(todos.filter((todo) => todo._id !== id));
+	}
+	async function handleComplete(id) {
+		await fetch(`${urlEndpoint}/todos/${id}`, {
+			method: "PUT",
+		});
+		setCompletedTodos(completedTodos.filter((todo) => todo.completed === true));
+	}
+
+	async function handleAdd(e) {
+		e.preventDefault();
+		const title = e.target.elements.title.value;
+		await fetch(`${urlEndpoint}/todos`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ title }),
+		});
+		setTodos([...todos, { title }]);
+		window.location.href = "/";
+	}
 
 	return (
-		<div className="App">
-			<h1>Todo List</h1>
-			<input type="text" placeholder="Add Todo" onKeyPress={addTodo} />
-			<ul className="todo-list">
-				{todos.map((todo) => (
-					<li key={todo._id}>
-						{todo.title}
-						<button onClick={() => deleteTodo(todo._id)}>Delete</button>
-					</li>
-				))}
-			</ul>
+		<div className="app-body">
+			<nav className="app-navbar">
+				<Link to="/" className="home-link">
+					Home
+				</Link>
+				<Link to="/add" className="addtodo-link">
+					Add Todo
+				</Link>
+			</nav>
+			<Routes>
+				<Route
+					path="/"
+					element={
+						<Home
+							todos={todos}
+							handleDelete={handleDelete}
+							handleComplete={handleComplete}
+						/>
+					}
+				/>
+				<Route path="/add" element={<AddTodo handleAdd={handleAdd} />} />
+			</Routes>
 		</div>
 	);
 }
